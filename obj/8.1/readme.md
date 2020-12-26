@@ -192,7 +192,7 @@ console.log(personName, personAge); // Matt, 27
 
 #### 嵌套解构
 
-```javascript
+```
 let personName, personAge;
 
 let person = {
