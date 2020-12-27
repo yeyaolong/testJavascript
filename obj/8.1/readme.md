@@ -166,7 +166,7 @@ obj.key = 2;
 
 console.log(obj.key);
 ```
-![image-20201227](./readme.assets/2020-12-27 19-26-52.png);
+![image-20201227](./readme.assets/2020-12-27 19-26-52.png)
 
 ### 8.1.2 定义多个属性
 
