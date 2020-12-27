@@ -46,9 +46,9 @@
 
 [[Enumerable]]: 表示属性是否可以通过for-in 循环返回.默认情况下，所有直接定义在对象上的属性的这个特性都是true.
 
-[[Get]]:获取函数，在读取属性时调用.默认值为undefined
+[[Get]]:获取函数，**在读取属性时调用**.默认值为undefined
 
-[[Set]]: 设置函数，在写入属性时调用。默认值为undefined
+[[Set]]: 设置函数，**在写入属性时调用**。默认值为undefined
 
 
 
@@ -65,6 +65,108 @@ Uncaught TypeError: Invalid property descriptor. Cannot both specify accessors a
 ```
 
 ![image-20201226094944548](./readme.assets/image-20201226094944548.png)
+
+**关于访问器属性，比较经典的用法应该是是vue中采用的订阅发布模式.**
+
+```javascript
+// vue/src/core/observer/index.js
+
+Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter () {
+      const value = getter ? getter.call(obj) : val
+      if (Dep.target) {
+        dep.depend()
+        if (childOb) {
+          childOb.dep.depend()
+          if (Array.isArray(value)) {
+            dependArray(value)
+          }
+        }
+      }
+      return value
+    },
+    set: function reactiveSetter (newVal) {
+      const value = getter ? getter.call(obj) : val
+      /* eslint-disable no-self-compare */
+      if (newVal === value || (newVal !== newVal && value !== value)) {
+        return
+      }
+      /* eslint-enable no-self-compare */
+      if (process.env.NODE_ENV !== 'production' && customSetter) {
+        customSetter()
+      }
+      // #7981: for accessor properties without setter
+      if (getter && !setter) return
+      if (setter) {
+        setter.call(obj, newVal)
+      } else {
+        val = newVal
+      }
+      childOb = !shallow && observe(newVal)
+      dep.notify()
+    }
+  })
+
+```
+
+我仿照着vue的代码，自己写了一个
+```javascript
+/**
+  * 添加访问器属性
+  */
+const defineReactive = function (obj, key, val) {
+    const property = Object.getOwnPropertyDescriptor(obj, key);
+    const getter = property && property.get;
+    const setter = property && property.set;
+
+    if ((!getter || setter) && arguments.length === 2) {
+        val = obj[key];
+    }
+    
+
+    Object.defineProperty(obj, key, {
+        enmmerable: true,
+        configurable: true,
+        get: function() {
+            const value = getter ? getter.call(obj) : val;
+            notify('get');
+            return value;
+        },
+        set: function (newVal) {             
+            val = newVal;
+            // 触发watch之类的回调方法
+            notify('set')
+        }
+    })
+}
+
+
+const notify = function (type) {
+    console.log(`触发了${type}方法`)
+}
+
+const addReactive = function(obj) {
+   for (key in obj) {
+        console.log(key)
+        defineReactive(obj, key);
+    } 
+}
+
+
+let obj = {
+    key: 1,
+    value: 'a'
+};
+
+addReactive(obj);
+
+obj.key = 2;
+
+console.log(obj.key);
+```
+![image-20201227](./readme.assets/2020-12-27 19-26-52.png);
 
 ### 8.1.2 定义多个属性
 
