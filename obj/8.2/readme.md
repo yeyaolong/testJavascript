@@ -127,3 +127,106 @@ let sayName = function() {
 但是，把函数定义在外部也有问题
 - 全局作用域污染
 - 自定义类型引用不能很好的聚集在一起,代码显得乱
+
+## 8.3 继承
+
+继承是面向对象编程中讨论最多的话题.很多面向对象语言都支持两种继承
+
+- 接口继承
+
+  只继承方法签名
+
+- 实现继承
+
+  继承实际的方法.
+
+接口继承在ECMAScript中是不可能的，因为函数没有签名.
+
+实现继承是ECMAScript唯一支持的继承方式，而这主要通过原型链实现.
+
+### 8.3.1 原型链
+```javascript
+function SuperType() {
+	this.property = true;
+}
+
+SuperType.prototype.getSuperValue = function () {
+	return this.property;
+}
+
+function SubType() {
+	this.subproperty = false;
+}
+
+// 继承SuperType
+SubType.prototype = new SuperType();
+
+SubType.prototype.getSubValue = function () {
+	return this.subproperty;
+}
+
+let instance = new SubType();
+console.log(instance.getSuperValue()); // true
+console.log(typeof instance); // 返回object，并不是想象中的 Subtype
+```
+#### 默认原型
+任何函数的默认都是一个 Object 的实例.
+
+#### 原型和继承关系
+原型和实例的关系可以通过两种方式来确定。
+
+第一种方式是**使用instanceof操作符**，如果**实例的原型链中出现过相应的构造函数，则instanceof 返回 true(注意：说的是构造函数在原型链中)**
+
+```javascript
+console.log(instance instanceof Object); // true
+console.log(instance instanceof SuperType); // true
+console.log(instance instanceof SubType); // true
+```
+
+从技术上讲,instance 是 Object、SuperType 和 SubType的实例，因为instance的原型链中包含这些构造函数的原型。结果就是instanceof 对所有这些构造函数都返回true
+
+
+
+确定这种关系的第二种方式是**使用isPrototypeOf()方法**。原型链中的每个原型都可以调用这个方法，如下例所示，**只要原型链中包含这个原型，这个方法就返回true（注意：这里说的是原型在原型链中）**
+
+```javascript
+console.log(Object.prototype.isPrototypeOf(instance); // true
+console.log(SuperType.prototype.isPrototypeOf(instance)); // true
+console.log(SubType.prototype.isPrototypeOf(instance)); // true
+```
+
+
+
+#### 关于方法
+
+子类有时候需要覆盖父类的方法，或者增加父类没有的方法。为此，**这些方法必须在原型赋值后再添加到原型上.**
+
+```javascript
+function SuperType() {
+	this.property = true;
+}
+
+SuperType.prototype.getSuperValue = function() {
+	return this.property;
+}
+
+function SubType() {
+	this.subproperty = false;
+}
+
+// 继承SuperTYpe
+SubType.prototype = new SuperType();
+
+// 新方法
+SubType.prototype.getSubValue = function () {
+	return this.subproperty;
+}
+
+// 覆盖已有的方法
+SubTYpe.prototype.getSuperValue = function () {
+	return false;
+}
+```
+
+**以对象字面量方式创建原型方法会破坏之前的原型链，因为这相当于重写了原型链**
+
