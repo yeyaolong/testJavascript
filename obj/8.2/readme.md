@@ -230,3 +230,149 @@ SubTYpe.prototype.getSuperValue = function () {
 
 **以对象字面量方式创建原型方法会破坏之前的原型链，因为这相当于重写了原型链**
 
+```javascript
+function SuperType() {
+    this.property = true;
+}
+
+SuperType.prototype.getSuperValue = function () {
+    return this.property;
+}
+
+function SubType() {
+    this.subproperty = false;
+}
+
+// 继承 SuperType
+SubType.prototype = new SuperType();
+
+// 通过对象字面量添加新方法, 这会导致上一行无效
+SubType.prototype = {
+    getSubValue() {
+        return this.subproperty;
+    },
+    someOtherMethod() {
+        return false;
+    }
+};
+
+let instance = new SubType();
+console.log(instance.getSuperValue()); // 出错!
+```
+
+#### 原型链问题
+
+- 1、原型中包含的引用值会在所有实例间共享,在使用原型实现继承时,原型实际变成了另一个类型的实例
+
+```javascript
+function SuperType() {
+    this.colors = ["red", "blue", "green"];
+}
+
+function SubType() {
+
+}
+
+// 继承SuperType
+SubType.prototype = new SuperType();
+
+let instance1 = new SubType();
+instance1.colors.push("black");
+
+let instance2 = new SubType();
+console.log(instance2.colors); // ["red", "blue", "green", "black"]
+```
+
+- 2、子类型在实例化时不能给父类型的构造函数传参.
+
+### 8.3.2 盗用构造函数
+
+基本思路: 在字类构造函数中调用父类构造函数
+
+```javascript
+function SuperType() {
+    this.colors = ["red", "blue", "green"];
+}
+
+function SubType() {
+    // 继承 SuperType
+    SuperType.call(this);
+}
+
+let instance1 = new SubType();
+instance1.colors.push("black");
+
+let instance2 = new SubType();
+console.log(instance2.colors); // "red, blue, green"
+```
+
+#### 1、传递参数
+
+相比于使用原型链,盗用构造函数的一个优点就是**可以在子类构造函数中向弗雷构造函数传参**.
+
+```javascript
+function SuperType(name) {
+    this.name = name;
+}
+
+function SubType() {
+    // 继承
+    SuperType.call(this, "Nicholas");
+    
+    // 实例属性
+    this.age = 29;
+}
+
+let instance = new SubType();
+console.log(instance.name);
+console.log(instance.age);
+```
+
+
+
+#### 2、盗用构造函数问题
+
+必须在构造 函数中定义方法，因此函数不能重用,子类也不能访问父类原型上定义的方法.
+
+
+
+### 8.3.3 组合继承
+
+```javascript
+function SuperType(name) {
+    this.name = name;
+    this.colors = ["red", "blue", "green"];
+}
+
+SuperType.prototype.sayName = function() {
+    console.log(this.name);
+}
+
+function SubType(name, age) {
+    // 继承属性, 属性用盗用构造函数继承
+    SuperType.call(this, name);
+    
+    this.age = age;
+}
+
+// 继承方法，方法用原型链继承.
+SubType.prototype = new SuperType();
+
+SubType.prototype.sayAge = function() {
+    console.log(this.age);
+}
+// 实际上原型链上也继承了SuperType的属性，但是由于查找的优先级，原型链的优先级比较低，所以，还是找到subtype.name，而不是subtype.prototype.name
+
+let instance1 = new SubType("Nicholas", 29);
+instance1.colors.push("black");
+console.log(instance1.colors); // "red, blue, green, black"
+instance1.sayName();
+instance1.sayAge();
+
+let instance2 = new SubType("Greg",19);
+console.log(instance2.colors); // "red, blue, green"
+instance2.sayName();
+instance2.sayAge();
+
+```
+
