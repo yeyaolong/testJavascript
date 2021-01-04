@@ -376,3 +376,54 @@ instance2.sayAge();
 
 ```
 
+### 8.3.4 原型式继承
+
+原型式继承非常适合不需要单独创建构造函数,但仍然需要在对象间共享信息的场合.
+
+```javascript
+function object(o) {
+    function F() {
+        
+    }
+    F.prototype = o; // 浅拷贝放到原型上
+    return new F();
+}
+
+let person = {
+    name: "Nicholas",
+    friends: ["Shelby", "Court", "Van"]
+}
+
+let anotherPerson = object(person);
+anotherPerson.name = "Greg";
+anotherPerson.friends.push("Rob");
+
+let yetAnotherPerson = object(person);
+yetAnotherPerson.name = "Linda";
+yetAnotherPerson.friends.push("Barbie");
+
+console.log(person.name); // "Nicholas",因为不是引用类型，所以不会改变
+console.log(person.friends); // ["Shelby", "Court", "Van", "Rob", Barbie"]
+```
+
+*ECMAScript 5* 通过*Object.create()* 将原型式继承的概念规范化了,Object.create()与 上面的 object()方法效果相同
+
+```javascript
+let person = {
+    name: "Nicholas",
+    friends: ["Shelby", "Court", "Van"]
+}
+
+let anotherPerson = Object.create(person);
+anotherPerson.name = "Greg";
+anotherPerson.friends.push("Rob");
+
+let yetAnotherPerson = Object.create(person);
+yetAnotherPerson.name = "Linda";
+yetAnotherPerson.friends.push("Barbie");
+
+console.log(person.name); // "Nicholas",因为不是引用类型，所以不会改变
+console.log(person.friends); // ["Shelby", "Court", "Van", "Rob", Barbie"]
+```
+
+### 8.3.5 寄生式继承
