@@ -223,7 +223,7 @@ SubType.prototype.getSubValue = function () {
 }
 
 // 覆盖已有的方法
-SubTYpe.prototype.getSuperValue = function () {
+SubType.prototype.getSuperValue = function () {
 	return false;
 }
 ```
@@ -262,7 +262,7 @@ console.log(instance.getSuperValue()); // 出错!
 
 #### 原型链问题
 
-- 1、原型中包含的引用值会在所有实例间共享,在使用原型实现继承时,原型实际变成了另一个类型的实例
+- 1、原型中包含的**引用值**会在所有实例间共享,在使用原型实现继承时,原型实际变成了另一个类型的实例
 
 ```javascript
 function SuperType() {
@@ -285,9 +285,33 @@ console.log(instance2.colors); // ["red", "blue", "green", "black"]
 
 - 2、子类型在实例化时不能给父类型的构造函数传参.
 
+  因为是基于原型链继承，所以SubType的参数在`SubType.prototype = new SuperType();`就已经被确定掉了。
+  
+  
+  
+  在子类型实例化时，子类SubType中，没有调用SuperType的方法，自然也就无法实现给父类传参.
+  
+  ```javascript
+  function SuperType() {
+      this.colors = ["red", "blue", "green"];
+  }
+  
+  function SubType(color) {
+  	this.subColor = color;
+  }
+  
+  // 继承SuperType
+  SubType.prototype = new SuperType();
+  
+  let instance1 = new SubType("black");
+  ```
+  
+  下面的*盗用构造函数*可以解决传参问题.
+
+
 ### 8.3.2 盗用构造函数
 
-基本思路: 在字类构造函数中调用父类构造函数
+基本思路: 在子类构造函数中调用父类构造函数
 
 ```javascript
 function SuperType() {
@@ -308,7 +332,7 @@ console.log(instance2.colors); // "red, blue, green"
 
 #### 1、传递参数
 
-相比于使用原型链,盗用构造函数的一个优点就是**可以在子类构造函数中向弗雷构造函数传参**.
+相比于使用原型链,盗用构造函数的一个优点就是**可以在子类构造函数中向父类构造函数传参**.
 
 ```javascript
 function SuperType(name) {
